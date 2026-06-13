@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07080c">
+<meta name="description" content="SpookySwipe - swipe through horror movies and shows by genre.">
+<title>SpookySwipe</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+
+<style>
+:root {
+  --bg:#050608;
+  --surface:rgba(18,19,24,.72);
+  --surface2:rgba(255,255,255,.055);
+  --surface3:rgba(255,255,255,.09);
+  --text:#f5f5f7;
+  --muted:#a1a1aa;
+  --accent:#ff2d55;
+  --accent2:#ff453a;
+  --blue:#0a84ff;
+  --green:#30d158;
+  --line:rgba(255,255,255,.10);
+  --lineRed:rgba(255,45,85,.30);
+  --shadow:rgba(0,0,0,.42);
+  --blur:saturate(160%) blur(22px);
+}
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { scroll-behavior:smooth; }
+body {
+  margin:0;
+  min-height:100vh;
+  color:var(--text);
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, Segoe UI, Arial, sans-serif;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,45,85,.18), transparent 28%),
+    radial-gradient(circle at 86% 18%, rgba(10,132,255,.07), transparent 24%),
+    linear-gradient(135deg, #020203 0%, #08090d 56%, #110507 100%);
+  overflow-x:hidden;
+}
+body:before {
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  opacity:.08;
+  background-image:
+    linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(to bottom, black, transparent 88%);
+}
+.app {
+  max-width:1180px;
+  margin:auto;
+  padding:22px 16px 48px;
+  position:relative;
+  z-index:1;
+}
+.header {
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:flex-start;
+  margin-bottom:18px;
+}
+.brand h1 {
+  margin:0;
+  font-size:clamp(46px,9vw,92px);
+  line-height:.84;
+  letter-spacing:-5px;
+  font-weight:900;
+}
+.brand p {
+  color:var(--muted);
+  margin:12px 0 0;
+  max-width:650px;
+  line-height:1.45;
+  font-size:16px;
+}
+.mark {
+  width:132px;
+  height:72px;
+  flex:0 0 auto;
+  border-radius:22px;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.13), rgba(255,255,255,.025)),
+    radial-gradient(circle at center, rgba(255,45,85,.22), transparent 56%),
+    rgba(20,21,26,.72);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.055), 0 18px 44px rgba(0,0,0,.26);
+  position:relative;
+  overflow:hidden;
+  backdrop-filter:var(--blur);
+  animation:float 5s ease-in-out infinite;
+}
+.mark:before,.mark:after {
+  content:"";
+  position:absolute;
+  inset:13px 18px;
+  border:2px solid rgba(255,45,85,.86);
+  border-left-color:transparent;
+  border-right-color:transparent;
+  transform:skewX(-18deg);
+  box-shadow:0 0 20px rgba(255,45,85,.24);
+}
+.mark:after {
+  inset:22px 34px;
+  border-color:rgba(255,255,255,.56);
+  border-top-color:transparent;
+  border-bottom-color:transparent;
+  transform:skewX(18deg);
+}
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+
+.toolbar, .genres {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:12px 0;
+}
+button, .button {
+  border:1px solid var(--line);
+  color:var(--text);
+  background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04)), rgba(22,23,28,.74);
+  padding:10px 13px;
+  border-radius:999px;
+  cursor:pointer;
+  font-weight:700;
+  font-size:14px;
+  letter-spacing:-.1px;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:42px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 10px 26px rgba(0,0,0,.18);
+  transition:transform .16s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+  backdrop-filter:var(--blur);
+}
+button:hover { border-color:rgba(255,255,255,.20); }
+button:active { transform:scale(.96); }
+button.active {
+  background:linear-gradient(180deg, rgba(255,45,85,.96), rgba(191,12,42,.92));
+  border-color:rgba(255,118,140,.58);
+  color:#fff;
+  box-shadow:0 10px 30px rgba(255,45,85,.18);
+}
+.miniIcon {
+  width:18px;
+  height:18px;
+  border-radius:7px;
+  display:inline-block;
+  position:relative;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.16);
+}
+.randomIcon:before { content:""; position:absolute; inset:4px; border-radius:50%; border:2px solid var(--accent); border-left-color:transparent; }
+.sortIcon:before { content:""; position:absolute; left:4px; right:4px; top:5px; height:2px; background:#fff; box-shadow:0 4px 0 rgba(255,255,255,.75), 0 8px 0 rgba(255,255,255,.5); }
+.favoriteIcon:before { content:""; position:absolute; inset:5px 4px 4px; background:var(--accent); transform:rotate(45deg); border-radius:2px; }
+.trailerIcon:before { content:""; position:absolute; left:7px; top:4px; border-left:7px solid #fff; border-top:5px solid transparent; border-bottom:5px solid transparent; }
+.ratingIcon:before { content:""; position:absolute; inset:4px; background:linear-gradient(180deg,#fff,#bbb); clip-path:polygon(50% 0,61% 35%,98% 35%,68% 56%,79% 92%,50% 70%,21% 92%,32% 56%,2% 35%,39% 35%); }
+.trendingIcon:before { content:""; position:absolute; left:4px; bottom:4px; width:10px; height:10px; border-left:2px solid var(--green); border-bottom:2px solid var(--green); transform:skew(-14deg); }
+.pickIcon:before { content:""; position:absolute; inset:4px; border-radius:50%; background:radial-gradient(circle, var(--blue) 0 35%, transparent 37%), conic-gradient(var(--blue), transparent, var(--accent)); }
+.resetIcon:before { content:""; position:absolute; inset:4px; border-radius:50%; border:2px solid #fff; border-right-color:transparent; }
+
+.search {
+  width:100%;
+  padding:15px 16px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.07);
+  color:var(--text);
+  font-size:16px;
+  outline:none;
+  margin:10px 0 14px;
+  backdrop-filter:var(--blur);
+}
+.search::placeholder { color:rgba(235,235,245,.42); }
+
+.main {
+  display:grid;
+  grid-template-columns:minmax(320px, 480px) 1fr;
+  gap:18px;
+  align-items:start;
+}
+.deckWrap { position:sticky; top:16px; }
+.deck {
+  position:relative;
+  height:650px;
+  max-height:72vh;
+  min-height:520px;
+}
+.card {
+  position:absolute;
+  inset:0;
+  border:1px solid var(--line);
+  border-radius:34px;
+  overflow:hidden;
+  background:linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.035)), rgba(14,15,20,.88);
+  box-shadow:0 28px 90px rgba(0,0,0,.42), 0 0 34px rgba(255,45,85,.10);
+  touch-action:none;
+  user-select:none;
+  display:flex;
+  flex-direction:column;
+  transform-origin:center bottom;
+  transition:transform .22s ease, opacity .22s ease;
+  backdrop-filter:var(--blur);
+}
+.card:nth-child(2) { transform:scale(.96) translateY(14px); opacity:.72; }
+.card:nth-child(3) { transform:scale(.92) translateY(28px); opacity:.38; }
+.poster {
+  flex:1;
+  min-height:280px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  background:radial-gradient(circle at center, rgba(255,45,85,.22), transparent 55%), linear-gradient(135deg, rgba(255,255,255,.08), rgba(0,0,0,.18));
+}
+.poster:before {
+  content:"";
+  position:absolute;
+  inset:28px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:28px;
+}
+.poster .genreMark {
+  width:180px;
+  height:104px;
+  border-radius:28px;
+  border:1px solid rgba(255,255,255,.14);
+  position:relative;
+  background:rgba(255,255,255,.055);
+  box-shadow:0 0 34px rgba(255,45,85,.14);
+}
+.poster .genreMark:before,.poster .genreMark:after {
+  content:"";
+  position:absolute;
+  inset:22px 26px;
+  border:3px solid rgba(255,45,85,.86);
+  border-left-color:transparent;
+  border-right-color:transparent;
+  transform:skewX(-18deg);
+}
+.poster .genreMark:after {
+  inset:34px 48px;
+  border-color:rgba(255,255,255,.6);
+  border-top-color:transparent;
+  border-bottom-color:transparent;
+  transform:skewX(18deg);
+}
+.cardInfo { padding:22px; }
+.cardInfo h2 {
+  margin:0;
+  font-size:clamp(30px,6vw,48px);
+  letter-spacing:-2px;
+  line-height:.92;
+  font-weight:900;
+}
+.meta { display:flex; gap:6px; flex-wrap:wrap; margin:12px 0; }
+.pill {
+  font-size:12px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:999px;
+  padding:5px 8px;
+  color:#e8e8ea;
+  background:rgba(255,255,255,.055);
+  font-weight:700;
+}
+.summary { color:var(--muted); line-height:1.45; margin:0; }
+.keywords { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
+.kw {
+  font-size:11px;
+  color:#fff;
+  background:linear-gradient(180deg, rgba(255,45,85,.96), rgba(191,12,42,.90));
+  padding:5px 7px;
+  border-radius:999px;
+  font-weight:800;
+}
+
+.stamp {
+  position:absolute;
+  top:34px;
+  padding:10px 18px;
+  border:3px solid;
+  border-radius:18px;
+  font-weight:900;
+  font-size:38px;
+  letter-spacing:-1px;
+  opacity:0;
+  pointer-events:none;
+  transform:rotate(-14deg);
+  z-index:6;
+}
+.stamp.no { left:28px; color:#d1d1d6; border-color:#d1d1d6; }
+.stamp.yes { right:22px; color:#ff2d55; border-color:#ff2d55; transform:rotate(14deg); }
+.blood {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:0;
+  z-index:5;
+  background:
+    radial-gradient(circle at 70% 32%, rgba(255,45,85,.90) 0 8px, transparent 9px),
+    radial-gradient(circle at 62% 38%, rgba(168,0,28,.82) 0 18px, transparent 19px),
+    radial-gradient(circle at 78% 48%, rgba(255,45,85,.62) 0 28px, transparent 29px);
+  filter:drop-shadow(0 0 14px rgba(255,45,85,.40));
+}
+.card.showNo .stamp.no { animation:noStamp .55s ease; }
+.card.showYes .stamp.yes { animation:yesStamp .55s ease; }
+.card.showYes .blood { animation:blood .55s ease; }
+@keyframes noStamp { 0%{opacity:0; transform:scale(.7) rotate(-14deg)} 40%{opacity:1; transform:scale(1.08) rotate(-14deg)} 100%{opacity:.95; transform:scale(1) rotate(-14deg)} }
+@keyframes yesStamp { 0%{opacity:0; transform:scale(.7) rotate(14deg)} 40%{opacity:1; transform:scale(1.08) rotate(14deg)} 100%{opacity:.95; transform:scale(1) rotate(14deg)} }
+@keyframes blood { 0%{opacity:0; transform:scale(.6)} 45%{opacity:1; transform:scale(1.05)} 100%{opacity:.78; transform:scale(1)} }
+
+.swipeActions {
+  display:flex;
+  gap:14px;
+  justify-content:center;
+  margin-top:14px;
+}
+.round {
+  width:112px;
+  height:56px;
+  border-radius:999px;
+  font-size:16px;
+}
+.round.no { border-color:rgba(209,209,214,.22); }
+.round.yes { border-color:rgba(255,45,85,.52); color:#fff; }
+
+.panel {
+  border:1px solid var(--line);
+  background:rgba(14,15,20,.64);
+  border-radius:26px;
+  padding:14px;
+  backdrop-filter:var(--blur);
+  box-shadow:0 18px 50px rgba(0,0,0,.20);
+}
+.panelHeader {
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  margin-bottom:10px;
+}
+.panelHeader h2 { margin:0; letter-spacing:-1px; }
+.table {
+  display:grid;
+  gap:8px;
+  max-height:680px;
+  overflow:auto;
+  padding-right:4px;
+}
+.row {
+  display:grid;
+  grid-template-columns:2fr .8fr 1fr 1fr auto;
+  gap:8px;
+  align-items:center;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;
+  background:rgba(255,255,255,.045);
+}
+.row b { letter-spacing:-.2px; }
+.row small { color:var(--muted); }
+.row button { padding:7px 10px; font-size:12px; min-height:34px; }
+
+.toast {
+  position:fixed;
+  left:50%;
+  bottom:22px;
+  transform:translateX(-50%) translateY(20px);
+  opacity:0;
+  z-index:80;
+  padding:12px 16px;
+  border-radius:999px;
+  background:rgba(20,21,26,.88);
+  border:1px solid var(--line);
+  color:#fff;
+  font-weight:800;
+  box-shadow:0 0 30px rgba(255,45,85,.18);
+  pointer-events:none;
+  backdrop-filter:var(--blur);
+}
+.toast.show { animation:toast .9s ease forwards; }
+@keyframes toast {
+  0%{opacity:0; transform:translateX(-50%) translateY(20px) scale(.96)}
+  18%{opacity:1; transform:translateX(-50%) translateY(0) scale(1)}
+  78%{opacity:1; transform:translateX(-50%) translateY(0) scale(1)}
+  100%{opacity:0; transform:translateX(-50%) translateY(10px) scale(.98)}
+}
+
+@media(max-width:900px) {
+  .main { grid-template-columns:1fr; }
+  .deckWrap { position:relative; top:auto; }
+  .deck { height:620px; max-height:none; }
+}
+@media(max-width:640px) {
+  .app { padding:18px 12px 36px; }
+  .header { align-items:flex-start; }
+  .mark { width:88px; height:54px; border-radius:18px; }
+  .mark:before { inset:11px 14px; }
+  .mark:after { inset:18px 24px; }
+  .brand h1 { max-width:calc(100vw - 128px); font-size:46px; letter-spacing:-3px; }
+  .brand p { font-size:14px; }
+  .toolbar button { flex:1 1 calc(50% - 8px); }
+  .genres button { flex:1 1 auto; }
+  .deck { height:590px; }
+  .cardInfo h2 { font-size:34px; }
+  .poster { min-height:245px; }
+  .row { grid-template-columns:1fr; }
+  .row button { width:100%; }
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="brand">
+      <h1>SpookySwipe</h1>
+      <p>A clean swipe-based horror picker. Swipe left to pass. Swipe right to search the title and save it to favorites.</p>
+    </div>
+    <div class="mark" aria-hidden="true"></div>
+  </header>
+
+  <div class="toolbar">
+    <button id="randomBtn"><span class="miniIcon randomIcon"></span><span>Random</span></button>
+    <button id="sortBtn"><span class="miniIcon sortIcon"></span><span>Sort</span></button>
+    <button id="favoritesBtn"><span class="miniIcon favoriteIcon"></span><span>Favorites</span></button>
+    <button id="trailerBtn"><span class="miniIcon trailerIcon"></span><span>Trailer</span></button>
+    <button id="ratingBtn"><span class="miniIcon ratingIcon"></span><span>Rating</span></button>
+    <button id="trendingBtn"><span class="miniIcon trendingIcon"></span><span>Trending</span></button>
+    <button id="pickBtn"><span class="miniIcon pickIcon"></span><span>Pick For Me</span></button>
+    <button id="resetBtn"><span class="miniIcon resetIcon"></span><span>Reset</span></button>
+  </div>
+
+  <div class="genres" id="genres"></div>
+  <input id="search" class="search" placeholder="Search titles, genres, keywords, focus size..." />
+
+  <main class="main">
+    <section class="deckWrap">
+      <div class="deck" id="deck"></div>
+      <div class="swipeActions">
+        <button class="round no" id="noBtn"><span>Pass</span></button>
+        <button class="round yes" id="yesBtn"><span>Pick</span></button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panelHeader">
+        <h2 id="panelTitle">Sorted Horror List</h2>
+        <span id="count" class="pill"></span>
+      </div>
+      <div class="table" id="table"></div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast">SpookySwipe</div>
+
+<script>
+const ALL = [{"id": 1, "title": "28 Days Later", "year": "2002", "type": "Movie", "genre": "Zombie / Infected", "runtime": "113 min", "focus": "Small group", "summary": "A survivor wakes into a rage-virus nightmare and joins a small group crossing a ruined Britain.", "keywords": ["rage virus", "fast infected", "survival", "empty city"], "searchUrl": "https://www.google.com/search?q=28+Days+Later+movie"}, {"id": 2, "title": "Train to Busan", "year": "2016", "type": "Movie", "genre": "Zombie / Infected", "runtime": "118 min", "focus": "Train passengers", "summary": "Passengers on a speeding train fight a fast-moving outbreak car by car.", "keywords": ["fast zombies", "sacrifice", "claustrophobic", "family"], "searchUrl": "https://www.google.com/search?q=Train+to+Busan+movie"}, {"id": 3, "title": "The Night Eats the World", "year": "2018", "type": "Movie", "genre": "Zombie / Infected", "runtime": "94 min", "focus": "One person", "summary": "A man wakes alone in Paris and survives inside an apartment building as the dead fill the streets.", "keywords": ["isolation", "apartment survival", "loneliness", "slow zombies"], "searchUrl": "https://www.google.com/search?q=The+Night+Eats+the+World+movie"}, {"id": 4, "title": "#Alive", "year": "2020", "type": "Movie", "genre": "Zombie / Infected", "runtime": "98 min", "focus": "One to two people", "summary": "A gamer trapped in his apartment struggles to survive a citywide infection.", "keywords": ["isolation", "technology", "urban outbreak", "infected"], "searchUrl": "https://www.google.com/search?q=#Alive+movie"}, {"id": 5, "title": "Cargo", "year": "2017", "type": "Movie", "genre": "Zombie / Infected", "runtime": "105 min", "focus": "Father and baby", "summary": "An infected father searches for safety for his infant daughter in rural Australia.", "keywords": ["sacrifice", "fatherhood", "emotional", "outbreak"], "searchUrl": "https://www.google.com/search?q=Cargo+movie"}, {"id": 6, "title": "REC", "year": "2007", "type": "Movie", "genre": "Zombie / Infected", "runtime": "78 min", "focus": "Apartment residents", "summary": "A TV crew is sealed inside a building as a terrifying infection spreads.", "keywords": ["found footage", "quarantine", "panic", "infection"], "searchUrl": "https://www.google.com/search?q=REC+movie"}, {"id": 7, "title": "Dawn of the Dead", "year": "2004", "type": "Movie", "genre": "Zombie / Infected", "runtime": "101 min", "focus": "Mall survivors", "summary": "Survivors barricade in a mall while fast zombies overrun the city.", "keywords": ["mall siege", "fast zombies", "action horror", "survival"], "searchUrl": "https://www.google.com/search?q=Dawn+of+the+Dead+movie"}, {"id": 8, "title": "Shaun of the Dead", "year": "2004", "type": "Movie", "genre": "Zombie / Infected", "runtime": "99 min", "focus": "Friends and family", "summary": "A slacker tries to save his loved ones during a zombie apocalypse.", "keywords": ["horror comedy", "slow zombies", "friendship", "survival"], "searchUrl": "https://www.google.com/search?q=Shaun+of+the+Dead+movie"}, {"id": 9, "title": "Zombieland", "year": "2009", "type": "Movie", "genre": "Zombie / Infected", "runtime": "88 min", "focus": "Four survivors", "summary": "A rule-obsessed survivor joins a chaotic found family on a zombie road trip.", "keywords": ["horror comedy", "road trip", "survival rules", "found family"], "searchUrl": "https://www.google.com/search?q=Zombieland+movie"}, {"id": 10, "title": "World War Z", "year": "2013", "type": "Movie", "genre": "Zombie / Infected", "runtime": "116 min", "focus": "Global investigator", "summary": "A former U.N. investigator searches worldwide for a way to stop a zombie pandemic.", "keywords": ["global outbreak", "swarms", "action", "pandemic"], "searchUrl": "https://www.google.com/search?q=World+War+Z+movie"}, {"id": 11, "title": "The Battery", "year": "2012", "type": "Movie", "genre": "Zombie / Infected", "runtime": "101 min", "focus": "Two survivors", "summary": "Two former baseball players drift through the apocalypse and clash over survival.", "keywords": ["minimalist", "friendship", "slow burn", "survival"], "searchUrl": "https://www.google.com/search?q=The+Battery+movie"}, {"id": 12, "title": "Pontypool", "year": "2008", "type": "Movie", "genre": "Zombie / Infected", "runtime": "93 min", "focus": "Radio station crew", "summary": "A radio crew discovers an outbreak may be spreading through language.", "keywords": ["psychological", "language virus", "paranoia", "radio station"], "searchUrl": "https://www.google.com/search?q=Pontypool+movie"}, {"id": 13, "title": "The Girl with All the Gifts", "year": "2016", "type": "Movie", "genre": "Zombie / Infected", "runtime": "111 min", "focus": "Small group", "summary": "A gifted infected girl may represent both humanity’s future and its end.", "keywords": ["intelligent infected", "ethics", "survival", "science"], "searchUrl": "https://www.google.com/search?q=The+Girl+with+All+the+Gifts+movie"}, {"id": 14, "title": "Night of the Living Dead", "year": "1968", "type": "Movie", "genre": "Zombie / Infected", "runtime": "96 min", "focus": "House survivors", "summary": "Strangers trapped in a farmhouse face the newly risen dead outside and each other inside.", "keywords": ["classic zombies", "siege", "paranoia", "social horror"], "searchUrl": "https://www.google.com/search?q=Night+of+the+Living+Dead+movie"}, {"id": 15, "title": "Dawn of the Dead", "year": "1978", "type": "Movie", "genre": "Zombie / Infected", "runtime": "127 min", "focus": "Mall survivors", "summary": "Survivors hide in a shopping mall as society collapses under the dead.", "keywords": ["consumerism", "slow zombies", "mall", "apocalypse"], "searchUrl": "https://www.google.com/search?q=Dawn+of+the+Dead+movie"}, {"id": 16, "title": "Day of the Dead", "year": "1985", "type": "Movie", "genre": "Zombie / Infected", "runtime": "101 min", "focus": "Bunker crew", "summary": "Scientists and soldiers clash underground while the dead dominate the surface.", "keywords": ["bunker", "military", "science horror", "isolation"], "searchUrl": "https://www.google.com/search?q=Day+of+the+Dead+movie"}, {"id": 17, "title": "Land of the Dead", "year": "2005", "type": "Movie", "genre": "Zombie / Infected", "runtime": "93 min", "focus": "City survivors", "summary": "A walled city reveals class warfare as zombies begin to evolve.", "keywords": ["class war", "evolved zombies", "siege", "apocalypse"], "searchUrl": "https://www.google.com/search?q=Land+of+the+Dead+movie"}, {"id": 18, "title": "Army of the Dead", "year": "2021", "type": "Movie", "genre": "Zombie / Infected", "runtime": "148 min", "focus": "Heist crew", "summary": "Mercenaries enter zombie-controlled Las Vegas to pull off a deadly heist.", "keywords": ["heist", "zombie kingdom", "action", "Vegas"], "searchUrl": "https://www.google.com/search?q=Army+of+the+Dead+movie"}, {"id": 19, "title": "Overlord", "year": "2018", "type": "Movie", "genre": "Zombie / Infected", "runtime": "110 min", "focus": "Soldier squad", "summary": "WWII soldiers discover Nazi experiments creating monstrous undead horrors.", "keywords": ["war horror", "experiments", "body horror", "squad"], "searchUrl": "https://www.google.com/search?q=Overlord+movie"}, {"id": 20, "title": "Planet Terror", "year": "2007", "type": "Movie", "genre": "Zombie / Infected", "runtime": "105 min", "focus": "Town survivors", "summary": "A chemical outbreak mutates locals into grotesque infected attackers.", "keywords": ["grindhouse", "gore", "outbreak", "action"], "searchUrl": "https://www.google.com/search?q=Planet+Terror+movie"}, {"id": 21, "title": "Dead Snow", "year": "2009", "type": "Movie", "genre": "Zombie / Infected", "runtime": "91 min", "focus": "Vacation group", "summary": "Vacationing friends fight Nazi zombies in the snowy wilderness.", "keywords": ["Nazi zombies", "splatter", "cabin", "survival"], "searchUrl": "https://www.google.com/search?q=Dead+Snow+movie"}, {"id": 22, "title": "Warm Bodies", "year": "2013", "type": "Movie", "genre": "Zombie / Infected", "runtime": "98 min", "focus": "One zombie and survivor", "summary": "A zombie begins to change after connecting with a living girl.", "keywords": ["romance", "comedy", "undead", "cure"], "searchUrl": "https://www.google.com/search?q=Warm+Bodies+movie"}, {"id": 23, "title": "Resident Evil", "year": "2002", "type": "Movie", "genre": "Zombie / Infected", "runtime": "100 min", "focus": "Special ops team", "summary": "A team enters an underground lab after a corporate biohazard outbreak.", "keywords": ["biotech", "lab", "action horror", "corporate evil"], "searchUrl": "https://www.google.com/search?q=Resident+Evil+movie"}, {"id": 24, "title": "Resident Evil: Apocalypse", "year": "2004", "type": "Movie", "genre": "Zombie / Infected", "runtime": "94 min", "focus": "City survivors", "summary": "Survivors fight through Raccoon City after the infection breaks containment.", "keywords": ["Raccoon City", "outbreak", "action", "Umbrella"], "searchUrl": "https://www.google.com/search?q=Resident+Evil:+Apocalypse+movie"}, {"id": 25, "title": "Resident Evil: Extinction", "year": "2007", "type": "Movie", "genre": "Zombie / Infected", "runtime": "94 min", "focus": "Convoy survivors", "summary": "Alice and a convoy of survivors cross a desert world overrun by infection.", "keywords": ["wasteland", "convoy", "mutants", "survival"], "searchUrl": "https://www.google.com/search?q=Resident+Evil:+Extinction+movie"}, {"id": 26, "title": "The Conjuring", "year": "2013", "type": "Movie", "genre": "Haunting", "runtime": "112 min", "focus": "Family and investigators", "summary": "Paranormal investigators help a family terrorized by a dark presence in a farmhouse.", "keywords": ["haunted house", "possession", "paranormal", "family"], "searchUrl": "https://www.google.com/search?q=The+Conjuring+movie"}, {"id": 27, "title": "The Conjuring 2", "year": "2016", "type": "Movie", "genre": "Haunting", "runtime": "134 min", "focus": "Family and investigators", "summary": "The Warrens investigate a violent haunting in London.", "keywords": ["ghosts", "possession", "haunted house", "demon"], "searchUrl": "https://www.google.com/search?q=The+Conjuring+2+movie"}, {"id": 28, "title": "Insidious", "year": "2010", "type": "Movie", "genre": "Haunting", "runtime": "103 min", "focus": "One family", "summary": "A family discovers their comatose child is connected to a terrifying spirit realm.", "keywords": ["astral projection", "demons", "family", "jump scares"], "searchUrl": "https://www.google.com/search?q=Insidious+movie"}, {"id": 29, "title": "Sinister", "year": "2012", "type": "Movie", "genre": "Haunting", "runtime": "110 min", "focus": "One family", "summary": "A true-crime writer finds disturbing films linked to an ancient evil.", "keywords": ["cursed footage", "demon", "investigation", "family danger"], "searchUrl": "https://www.google.com/search?q=Sinister+movie"}, {"id": 30, "title": "Hereditary", "year": "2018", "type": "Movie", "genre": "Haunting", "runtime": "127 min", "focus": "One family", "summary": "A grieving family uncovers a terrifying inherited darkness.", "keywords": ["grief", "cult", "possession", "dread"], "searchUrl": "https://www.google.com/search?q=Hereditary+movie"}, {"id": 31, "title": "The Babadook", "year": "2014", "type": "Movie", "genre": "Haunting", "runtime": "94 min", "focus": "Mother and child", "summary": "A mother and son are tormented by a storybook monster tied to grief.", "keywords": ["grief", "psychological", "monster", "motherhood"], "searchUrl": "https://www.google.com/search?q=The+Babadook+movie"}, {"id": 32, "title": "The Others", "year": "2001", "type": "Movie", "genre": "Haunting", "runtime": "104 min", "focus": "Mother and children", "summary": "A mother in an isolated mansion suspects her home is haunted.", "keywords": ["ghosts", "mansion", "twist", "isolation"], "searchUrl": "https://www.google.com/search?q=The+Others+movie"}, {"id": 33, "title": "Poltergeist", "year": "1982", "type": "Movie", "genre": "Haunting", "runtime": "114 min", "focus": "One family", "summary": "A suburban family’s home is invaded by dangerous spirits.", "keywords": ["suburban haunting", "ghosts", "family", "classic"], "searchUrl": "https://www.google.com/search?q=Poltergeist+movie"}, {"id": 34, "title": "The Ring", "year": "2002", "type": "Movie", "genre": "Haunting", "runtime": "115 min", "focus": "Investigator", "summary": "A cursed videotape gives viewers seven days to live.", "keywords": ["curse", "videotape", "ghost", "mystery"], "searchUrl": "https://www.google.com/search?q=The+Ring+movie"}, {"id": 35, "title": "The Grudge", "year": "2004", "type": "Movie", "genre": "Haunting", "runtime": "91 min", "focus": "Several victims", "summary": "A rage-filled curse spreads through a haunted house.", "keywords": ["curse", "ghost", "J-horror", "dread"], "searchUrl": "https://www.google.com/search?q=The+Grudge+movie"}, {"id": 36, "title": "Paranormal Activity", "year": "2007", "type": "Movie", "genre": "Haunting", "runtime": "86 min", "focus": "Couple", "summary": "A couple records escalating supernatural activity inside their home.", "keywords": ["found footage", "demon", "house", "slow burn"], "searchUrl": "https://www.google.com/search?q=Paranormal+Activity+movie"}, {"id": 37, "title": "Oculus", "year": "2013", "type": "Movie", "genre": "Haunting", "runtime": "104 min", "focus": "Siblings", "summary": "Siblings confront a cursed mirror that distorts reality.", "keywords": ["cursed object", "siblings", "reality bending", "trauma"], "searchUrl": "https://www.google.com/search?q=Oculus+movie"}, {"id": 38, "title": "Talk to Me", "year": "2022", "type": "Movie", "genre": "Haunting", "runtime": "95 min", "focus": "Teen friends", "summary": "Friends use an embalmed hand to contact spirits and unleash something worse.", "keywords": ["possession", "party horror", "grief", "spirits"], "searchUrl": "https://www.google.com/search?q=Talk+to+Me+movie"}, {"id": 39, "title": "Smile", "year": "2022", "type": "Movie", "genre": "Haunting", "runtime": "115 min", "focus": "One woman", "summary": "A psychiatrist is stalked by a supernatural curse that spreads through trauma.", "keywords": ["curse", "trauma", "paranoia", "supernatural"], "searchUrl": "https://www.google.com/search?q=Smile+movie"}, {"id": 40, "title": "It Follows", "year": "2014", "type": "Movie", "genre": "Haunting", "runtime": "100 min", "focus": "Small friend group", "summary": "A relentless supernatural entity follows its victims after intimacy.", "keywords": ["curse", "dread", "stalking", "teen horror"], "searchUrl": "https://www.google.com/search?q=It+Follows+movie"}, {"id": 41, "title": "The Autopsy of Jane Doe", "year": "2016", "type": "Movie", "genre": "Haunting", "runtime": "86 min", "focus": "Father and son", "summary": "A mysterious corpse unleashes terror inside a morgue.", "keywords": ["morgue", "witchcraft", "claustrophobic", "mystery"], "searchUrl": "https://www.google.com/search?q=The+Autopsy+of+Jane+Doe+movie"}, {"id": 42, "title": "The Black Phone", "year": "2021", "type": "Movie", "genre": "Haunting", "runtime": "103 min", "focus": "Kidnapped boy", "summary": "A kidnapped boy receives calls from a killer’s dead victims.", "keywords": ["ghosts", "kidnapping", "survival", "serial killer"], "searchUrl": "https://www.google.com/search?q=The+Black+Phone+movie"}, {"id": 43, "title": "A Tale of Two Sisters", "year": "2003", "type": "Movie", "genre": "Haunting", "runtime": "115 min", "focus": "One family", "summary": "Two sisters return home to a family haunted by secrets and visions.", "keywords": ["psychological", "family", "ghosts", "Korean horror"], "searchUrl": "https://www.google.com/search?q=A+Tale+of+Two+Sisters+movie"}, {"id": 44, "title": "The Orphanage", "year": "2007", "type": "Movie", "genre": "Haunting", "runtime": "105 min", "focus": "Mother", "summary": "A mother investigates eerie happenings linked to her son and an old orphanage.", "keywords": ["ghosts", "grief", "mystery", "Spanish horror"], "searchUrl": "https://www.google.com/search?q=The+Orphanage+movie"}, {"id": 45, "title": "Lake Mungo", "year": "2008", "type": "Movie", "genre": "Haunting", "runtime": "87 min", "focus": "One family", "summary": "A family investigates unsettling evidence after their daughter’s death.", "keywords": ["mockumentary", "grief", "ghost", "dread"], "searchUrl": "https://www.google.com/search?q=Lake+Mungo+movie"}, {"id": 46, "title": "Host", "year": "2020", "type": "Movie", "genre": "Haunting", "runtime": "57 min", "focus": "Friend group", "summary": "A Zoom séance goes horribly wrong during lockdown.", "keywords": ["screenlife", "séance", "lockdown", "ghost"], "searchUrl": "https://www.google.com/search?q=Host+movie"}, {"id": 47, "title": "Skinamarink", "year": "2022", "type": "Movie", "genre": "Haunting", "runtime": "100 min", "focus": "Children", "summary": "Two children wake to find their home changed and their parents missing.", "keywords": ["experimental", "nightmare", "childhood fear", "liminal"], "searchUrl": "https://www.google.com/search?q=Skinamarink+movie"}, {"id": 48, "title": "The Night House", "year": "2020", "type": "Movie", "genre": "Haunting", "runtime": "107 min", "focus": "One woman", "summary": "A widow uncovers disturbing secrets in the house her husband built.", "keywords": ["grief", "occult", "house", "psychological"], "searchUrl": "https://www.google.com/search?q=The+Night+House+movie"}, {"id": 49, "title": "Crimson Peak", "year": "2015", "type": "Movie", "genre": "Haunting", "runtime": "119 min", "focus": "Young bride", "summary": "A woman moves into a decaying mansion haunted by ghosts and secrets.", "keywords": ["gothic", "ghosts", "mansion", "romance"], "searchUrl": "https://www.google.com/search?q=Crimson+Peak+movie"}, {"id": 50, "title": "Halloween", "year": "1978", "type": "Movie", "genre": "Slasher", "runtime": "91 min", "focus": "One town / babysitters", "summary": "Michael Myers stalks babysitters on Halloween night.", "keywords": ["slasher", "masked killer", "stalking", "classic"], "searchUrl": "https://www.google.com/search?q=Halloween+movie"}, {"id": 51, "title": "Scream", "year": "1996", "type": "Movie", "genre": "Slasher", "runtime": "111 min", "focus": "Teen friend group", "summary": "A masked killer targets teens while playing by horror-movie rules.", "keywords": ["meta horror", "slasher", "mystery", "teens"], "searchUrl": "https://www.google.com/search?q=Scream+movie"}, {"id": 52, "title": "A Nightmare on Elm Street", "year": "1984", "type": "Movie", "genre": "Slasher", "runtime": "91 min", "focus": "Teen group", "summary": "Freddy Krueger kills teens in their dreams.", "keywords": ["dreams", "slasher", "supernatural", "teens"], "searchUrl": "https://www.google.com/search?q=A+Nightmare+on+Elm+Street+movie"}, {"id": 53, "title": "Friday the 13th", "year": "1980", "type": "Movie", "genre": "Slasher", "runtime": "95 min", "focus": "Camp counselors", "summary": "Camp counselors are stalked by a killer at Crystal Lake.", "keywords": ["camp", "slasher", "revenge", "stalker"], "searchUrl": "https://www.google.com/search?q=Friday+the+13th+movie"}, {"id": 54, "title": "The Texas Chain Saw Massacre", "year": "1974", "type": "Movie", "genre": "Slasher", "runtime": "83 min", "focus": "Road-trip friends", "summary": "Friends encounter a cannibal family in rural Texas.", "keywords": ["cannibals", "rural horror", "survival", "gritty"], "searchUrl": "https://www.google.com/search?q=The+Texas+Chain+Saw+Massacre+movie"}, {"id": 55, "title": "Psycho", "year": "1960", "type": "Movie", "genre": "Slasher", "runtime": "109 min", "focus": "One traveler", "summary": "A woman checks into a motel run by a deeply disturbed owner.", "keywords": ["motel", "psychological", "classic", "killer"], "searchUrl": "https://www.google.com/search?q=Psycho+movie"}, {"id": 56, "title": "Midsommar", "year": "2019", "type": "Movie", "genre": "Cult Horror", "runtime": "148 min", "focus": "Friend group", "summary": "A grieving woman joins friends at a beautiful but horrifying Swedish festival.", "keywords": ["folk horror", "cult", "grief", "daylight horror"], "searchUrl": "https://www.google.com/search?q=Midsommar+movie"}, {"id": 57, "title": "The Wicker Man", "year": "1973", "type": "Movie", "genre": "Cult Horror", "runtime": "88 min", "focus": "Investigator", "summary": "A police officer investigates a disappearance on a pagan island.", "keywords": ["folk horror", "cult", "island", "ritual"], "searchUrl": "https://www.google.com/search?q=The+Wicker+Man+movie"}, {"id": 58, "title": "The Witch", "year": "2015", "type": "Movie", "genre": "Cult Horror", "runtime": "92 min", "focus": "One family", "summary": "A Puritan family unravels after being cast out near a dark forest.", "keywords": ["witchcraft", "isolation", "religion", "folk horror"], "searchUrl": "https://www.google.com/search?q=The+Witch+movie"}, {"id": 59, "title": "Saint Maud", "year": "2019", "type": "Movie", "genre": "Psychological", "runtime": "84 min", "focus": "One woman", "summary": "A devout nurse becomes dangerously obsessed with saving a patient’s soul.", "keywords": ["religion", "obsession", "psychological", "body horror"], "searchUrl": "https://www.google.com/search?q=Saint+Maud+movie"}, {"id": 60, "title": "Black Swan", "year": "2010", "type": "Movie", "genre": "Psychological", "runtime": "108 min", "focus": "One dancer", "summary": "A ballerina descends into paranoia while chasing perfection.", "keywords": ["psychological", "obsession", "body horror", "art"], "searchUrl": "https://www.google.com/search?q=Black+Swan+movie"}, {"id": 61, "title": "The Lighthouse", "year": "2019", "type": "Movie", "genre": "Psychological", "runtime": "109 min", "focus": "Two men", "summary": "Two lighthouse keepers spiral into madness on a remote island.", "keywords": ["isolation", "madness", "maritime", "surreal"], "searchUrl": "https://www.google.com/search?q=The+Lighthouse+movie"}, {"id": 62, "title": "Barbarian", "year": "2022", "type": "Movie", "genre": "Modern Horror", "runtime": "102 min", "focus": "Small group", "summary": "A rental house hides a nightmare below the surface.", "keywords": ["rental", "basement", "twist", "survival"], "searchUrl": "https://www.google.com/search?q=Barbarian+movie"}, {"id": 63, "title": "Malignant", "year": "2021", "type": "Movie", "genre": "Modern Horror", "runtime": "111 min", "focus": "One woman", "summary": "A woman’s visions of murders reveal a bizarre hidden truth.", "keywords": ["giallo", "body horror", "twist", "violent"], "searchUrl": "https://www.google.com/search?q=Malignant+movie"}, {"id": 64, "title": "X", "year": "2022", "type": "Movie", "genre": "Slasher", "runtime": "105 min", "focus": "Film crew", "summary": "A film crew shooting in rural Texas encounters murderous hosts.", "keywords": ["slasher", "filmmaking", "rural", "aging"], "searchUrl": "https://www.google.com/search?q=X+movie"}, {"id": 65, "title": "Pearl", "year": "2022", "type": "Movie", "genre": "Slasher", "runtime": "102 min", "focus": "One woman", "summary": "A young woman’s dreams of fame twist into violence and madness.", "keywords": ["character study", "slasher", "obsession", "fame"], "searchUrl": "https://www.google.com/search?q=Pearl+movie"}, {"id": 66, "title": "Bodies Bodies Bodies", "year": "2022", "type": "Movie", "genre": "Slasher", "runtime": "94 min", "focus": "Friend group", "summary": "A hurricane party turns deadly as rich friends turn on each other.", "keywords": ["satire", "whodunit", "Gen Z", "party horror"], "searchUrl": "https://www.google.com/search?q=Bodies+Bodies+Bodies+movie"}, {"id": 67, "title": "Thanksgiving", "year": "2023", "type": "Movie", "genre": "Slasher", "runtime": "106 min", "focus": "Town victims", "summary": "A holiday-themed killer terrorizes a town after a Black Friday tragedy.", "keywords": ["holiday horror", "slasher", "revenge", "gore"], "searchUrl": "https://www.google.com/search?q=Thanksgiving+movie"}, {"id": 68, "title": "Totally Killer", "year": "2023", "type": "Movie", "genre": "Slasher", "runtime": "106 min", "focus": "Teen time traveler", "summary": "A teen travels to the 1980s to stop a masked killer.", "keywords": ["time travel", "slasher comedy", "80s", "mystery"], "searchUrl": "https://www.google.com/search?q=Totally+Killer+movie"}, {"id": 69, "title": "A Quiet Place", "year": "2018", "type": "Movie", "genre": "Monster / Disaster", "runtime": "90 min", "focus": "One family", "summary": "A family survives silently in a world hunted by sound-sensitive creatures.", "keywords": ["creatures", "silence", "family", "apocalypse"], "searchUrl": "https://www.google.com/search?q=A+Quiet+Place+movie"}, {"id": 70, "title": "A Quiet Place Part II", "year": "2020", "type": "Movie", "genre": "Monster / Disaster", "runtime": "97 min", "focus": "Family survivors", "summary": "The Abbott family ventures beyond home into a wider creature-ravaged world.", "keywords": ["creatures", "survival", "silence", "sequel"], "searchUrl": "https://www.google.com/search?q=A+Quiet+Place+Part+II+movie"}, {"id": 71, "title": "Cloverfield", "year": "2008", "type": "Movie", "genre": "Monster / Disaster", "runtime": "85 min", "focus": "Friend group", "summary": "Friends document a monster attack destroying New York City.", "keywords": ["found footage", "monster", "city disaster", "panic"], "searchUrl": "https://www.google.com/search?q=Cloverfield+movie"}, {"id": 72, "title": "The Mist", "year": "2007", "type": "Movie", "genre": "Monster / Disaster", "runtime": "126 min", "focus": "Store survivors", "summary": "People trapped in a supermarket face monsters outside and fanaticism inside.", "keywords": ["creatures", "siege", "bleak", "group panic"], "searchUrl": "https://www.google.com/search?q=The+Mist+movie"}, {"id": 73, "title": "The Descent", "year": "2005", "type": "Movie", "genre": "Monster / Disaster", "runtime": "99 min", "focus": "Cave explorers", "summary": "Women trapped in a cave discover predatory creatures in the dark.", "keywords": ["caves", "creatures", "claustrophobic", "survival"], "searchUrl": "https://www.google.com/search?q=The+Descent+movie"}, {"id": 74, "title": "Alien", "year": "1979", "type": "Movie", "genre": "Monster / Disaster", "runtime": "117 min", "focus": "Space crew", "summary": "A commercial spaceship crew is hunted by a perfect organism.", "keywords": ["sci-fi horror", "creature", "isolation", "space"], "searchUrl": "https://www.google.com/search?q=Alien+movie"}, {"id": 75, "title": "Aliens", "year": "1986", "type": "Movie", "genre": "Monster / Disaster", "runtime": "137 min", "focus": "Marine squad", "summary": "Marines and a survivor face a xenomorph hive on a colony world.", "keywords": ["action horror", "hive", "aliens", "squad"], "searchUrl": "https://www.google.com/search?q=Aliens+movie"}, {"id": 76, "title": "The Thing", "year": "1982", "type": "Movie", "genre": "Monster / Disaster", "runtime": "109 min", "focus": "Research team", "summary": "Antarctic researchers face a shape-shifting alien that imitates them.", "keywords": ["paranoia", "body horror", "isolation", "alien"], "searchUrl": "https://www.google.com/search?q=The+Thing+movie"}, {"id": 77, "title": "Nope", "year": "2022", "type": "Movie", "genre": "Monster / Disaster", "runtime": "130 min", "focus": "Siblings", "summary": "Siblings investigate a terrifying phenomenon in the sky above their ranch.", "keywords": ["spectacle", "creature", "UFO", "Hollywood"], "searchUrl": "https://www.google.com/search?q=Nope+movie"}, {"id": 78, "title": "Annihilation", "year": "2018", "type": "Movie", "genre": "Monster / Disaster", "runtime": "115 min", "focus": "Expedition team", "summary": "Scientists enter a mutating zone where biology and identity unravel.", "keywords": ["mutation", "cosmic horror", "expedition", "surreal"], "searchUrl": "https://www.google.com/search?q=Annihilation+movie"}, {"id": 79, "title": "Underwater", "year": "2020", "type": "Movie", "genre": "Monster / Disaster", "runtime": "95 min", "focus": "Deep-sea crew", "summary": "A drilling crew escapes a collapsing underwater facility while creatures stalk them.", "keywords": ["deep sea", "creatures", "claustrophobic", "survival"], "searchUrl": "https://www.google.com/search?q=Underwater+movie"}, {"id": 80, "title": "The Host", "year": "2006", "type": "Movie", "genre": "Monster / Disaster", "runtime": "120 min", "focus": "One family", "summary": "A family tries to rescue a girl taken by a monster from the Han River.", "keywords": ["creature", "family", "Korean horror", "pollution"], "searchUrl": "https://www.google.com/search?q=The+Host+movie"}, {"id": 81, "title": "10 Cloverfield Lane", "year": "2016", "type": "Movie", "genre": "Monster / Disaster", "runtime": "103 min", "focus": "Bunker trio", "summary": "A woman wakes in a bunker and questions whether the outside world is truly unsafe.", "keywords": ["bunker", "paranoia", "survival", "thriller"], "searchUrl": "https://www.google.com/search?q=10+Cloverfield+Lane+movie"}, {"id": 82, "title": "Bird Box", "year": "2018", "type": "Movie", "genre": "Monster / Disaster", "runtime": "124 min", "focus": "Mother and children", "summary": "A mother navigates a world where seeing mysterious entities drives people to death.", "keywords": ["apocalypse", "unseen horror", "survival", "family"], "searchUrl": "https://www.google.com/search?q=Bird+Box+movie"}, {"id": 83, "title": "The Road", "year": "2009", "type": "Movie", "genre": "Monster / Disaster", "runtime": "111 min", "focus": "Father and son", "summary": "A father and son cross a bleak post-collapse America.", "keywords": ["post-apocalyptic", "survival", "bleak", "family"], "searchUrl": "https://www.google.com/search?q=The+Road+movie"}, {"id": 84, "title": "Children of Men", "year": "2006", "type": "Movie", "genre": "Monster / Disaster", "runtime": "109 min", "focus": "Escort group", "summary": "A man escorts a pregnant woman through a collapsing infertile world.", "keywords": ["dystopia", "collapse", "hope", "mission"], "searchUrl": "https://www.google.com/search?q=Children+of+Men+movie"}, {"id": 85, "title": "Contagion", "year": "2011", "type": "Movie", "genre": "Viral Outbreak", "runtime": "106 min", "focus": "Doctors and families", "summary": "A deadly virus spreads worldwide while society fractures.", "keywords": ["pandemic", "realism", "science", "public panic"], "searchUrl": "https://www.google.com/search?q=Contagion+movie"}, {"id": 86, "title": "Outbreak", "year": "1995", "type": "Movie", "genre": "Viral Outbreak", "runtime": "127 min", "focus": "Medical team", "summary": "Doctors and military officials race to contain a lethal virus.", "keywords": ["virus", "containment", "military", "town lockdown"], "searchUrl": "https://www.google.com/search?q=Outbreak+movie"}, {"id": 87, "title": "The Crazies", "year": "2010", "type": "Movie", "genre": "Viral Outbreak", "runtime": "101 min", "focus": "Small-town survivors", "summary": "A toxin turns townspeople violently unstable as the military closes in.", "keywords": ["infection", "paranoia", "government", "small town"], "searchUrl": "https://www.google.com/search?q=The+Crazies+movie"}, {"id": 88, "title": "It Comes at Night", "year": "2017", "type": "Movie", "genre": "Viral Outbreak", "runtime": "91 min", "focus": "Two families", "summary": "Two families share a home during an unseen outbreak as distrust grows.", "keywords": ["paranoia", "infection", "isolation", "distrust"], "searchUrl": "https://www.google.com/search?q=It+Comes+at+Night+movie"}, {"id": 89, "title": "The Sadness", "year": "2021", "type": "Movie", "genre": "Viral Outbreak", "runtime": "99 min", "focus": "Couple separated", "summary": "A rage-like virus turns people into sadistic attackers.", "keywords": ["extreme horror", "virus", "violence", "outbreak"], "searchUrl": "https://www.google.com/search?q=The+Sadness+movie"}, {"id": 90, "title": "Mayhem", "year": "2017", "type": "Movie", "genre": "Viral Outbreak", "runtime": "86 min", "focus": "Office workers", "summary": "A workplace infection removes inhibitions and unleashes chaos.", "keywords": ["office", "virus", "action horror", "revenge"], "searchUrl": "https://www.google.com/search?q=Mayhem+movie"}, {"id": 91, "title": "The Bay", "year": "2012", "type": "Movie", "genre": "Viral Outbreak", "runtime": "84 min", "focus": "Town residents", "summary": "A coastal town suffers a horrifying parasite outbreak.", "keywords": ["found footage", "parasites", "eco horror", "infection"], "searchUrl": "https://www.google.com/search?q=The+Bay+movie"}, {"id": 92, "title": "Cabin Fever", "year": "2002", "type": "Movie", "genre": "Viral Outbreak", "runtime": "93 min", "focus": "Cabin group", "summary": "Friends at a cabin are consumed by a flesh-eating virus.", "keywords": ["body horror", "cabin", "infection", "paranoia"], "searchUrl": "https://www.google.com/search?q=Cabin+Fever+movie"}, {"id": 93, "title": "Quarantine", "year": "2008", "type": "Movie", "genre": "Viral Outbreak", "runtime": "89 min", "focus": "Apartment residents", "summary": "A reporter is trapped in a building under violent quarantine.", "keywords": ["found footage", "infection", "apartment", "panic"], "searchUrl": "https://www.google.com/search?q=Quarantine+movie"}, {"id": 94, "title": "The Last of Us", "year": "2023–present", "type": "TV Show", "genre": "Zombie / Infected", "runtime": "~46–81 min/ep", "focus": "Two survivors", "summary": "A hardened survivor escorts a teen across fungal-infected America.", "keywords": ["cordyceps", "emotional", "small group", "post-apocalyptic"], "searchUrl": "https://www.google.com/search?q=The+Last+of+Us+movie"}, {"id": 95, "title": "The Walking Dead", "year": "2010–2022", "type": "TV Show", "genre": "Zombie / Infected", "runtime": "~42–67 min/ep", "focus": "Large group", "summary": "Survivors build communities and battle humans and walkers after collapse.", "keywords": ["walkers", "survival", "morality", "communities"], "searchUrl": "https://www.google.com/search?q=The+Walking+Dead+movie"}, {"id": 96, "title": "Black Summer", "year": "2019–2021", "type": "TV Show", "genre": "Zombie / Infected", "runtime": "~20–58 min/ep", "focus": "Scattered survivors", "summary": "Ordinary people run and hide during the chaotic early outbreak.", "keywords": ["fast infected", "panic", "realism", "survival"], "searchUrl": "https://www.google.com/search?q=Black+Summer+movie"}, {"id": 97, "title": "Kingdom", "year": "2019–2021", "type": "TV Show", "genre": "Zombie / Infected", "runtime": "~36–56 min/ep", "focus": "Royal court and survivors", "summary": "A zombie plague collides with political corruption in Joseon Korea.", "keywords": ["period horror", "plague", "politics", "fast zombies"], "searchUrl": "https://www.google.com/search?q=Kingdom+movie"}, {"id": 98, "title": "All of Us Are Dead", "year": "2022–present", "type": "TV Show", "genre": "Zombie / Infected", "runtime": "~53–72 min/ep", "focus": "High school students", "summary": "Students trapped in school fight a fast-spreading zombie outbreak.", "keywords": ["school siege", "friendship", "infected", "survival"], "searchUrl": "https://www.google.com/search?q=All+of+Us+Are+Dead+movie"}, {"id": 99, "title": "Dead Set", "year": "2008", "type": "TV Show", "genre": "Zombie / Infected", "runtime": "~24–45 min/ep", "focus": "Reality show cast", "summary": "Reality contestants are sealed away as the dead take over outside.", "keywords": ["satire", "trapped", "zombies", "media"], "searchUrl": "https://www.google.com/search?q=Dead+Set+movie"}, {"id": 100, "title": "Z Nation", "year": "2014–2018", "type": "TV Show", "genre": "Zombie / Infected", "runtime": "~42 min/ep", "focus": "Road-trip group", "summary": "A ragtag crew transports a possible cure across zombie America.", "keywords": ["road trip", "mutations", "comedy", "action"], "searchUrl": "https://www.google.com/search?q=Z+Nation+movie"}, {"id": 101, "title": "Santa Clarita Diet", "year": "2017–2019", "type": "TV Show", "genre": "Zombie / Infected", "runtime": "~26–35 min/ep", "focus": "One family", "summary": "A suburban family hides a sudden undead appetite.", "keywords": ["horror comedy", "family", "undead", "suburban"], "searchUrl": "https://www.google.com/search?q=Santa+Clarita+Diet+movie"}, {"id": 102, "title": "The Haunting of Hill House", "year": "2018", "type": "TV Show", "genre": "Haunting", "runtime": "~42–71 min/ep", "focus": "One family", "summary": "A family confronts ghosts and trauma from their childhood home.", "keywords": ["ghosts", "family trauma", "grief", "haunted house"], "searchUrl": "https://www.google.com/search?q=The+Haunting+of+Hill+House+movie"}, {"id": 103, "title": "Midnight Mass", "year": "2021", "type": "TV Show", "genre": "Haunting", "runtime": "~60–70 min/ep", "focus": "Island community", "summary": "A mysterious priest brings miracles and horror to an isolated island.", "keywords": ["faith", "island", "vampire horror", "community"], "searchUrl": "https://www.google.com/search?q=Midnight+Mass+movie"}, {"id": 104, "title": "Channel Zero", "year": "2016–2018", "type": "TV Show", "genre": "Haunting", "runtime": "~42 min/ep", "focus": "Varies", "summary": "Anthology seasons explore cursed media, monsters, and surreal childhood nightmares.", "keywords": ["anthology", "creepypasta", "surreal", "monsters"], "searchUrl": "https://www.google.com/search?q=Channel+Zero+movie"}, {"id": 105, "title": "Marianne", "year": "2019", "type": "TV Show", "genre": "Haunting", "runtime": "~36–52 min/ep", "focus": "Writer and friends", "summary": "A horror writer discovers her fictional witch may be real.", "keywords": ["witch", "French horror", "curse", "writer"], "searchUrl": "https://www.google.com/search?q=Marianne+movie"}, {"id": 106, "title": "Archive 81", "year": "2022", "type": "TV Show", "genre": "Haunting", "runtime": "~45–58 min/ep", "focus": "Archivist", "summary": "A restorer uncovers a cult mystery through damaged videotapes.", "keywords": ["cult", "videotapes", "mystery", "supernatural"], "searchUrl": "https://www.google.com/search?q=Archive+81+movie"}, {"id": 107, "title": "From", "year": "2022–present", "type": "TV Show", "genre": "Monster / Disaster", "runtime": "~45–55 min/ep", "focus": "Town survivors", "summary": "People trapped in a town fight nocturnal monsters and impossible rules.", "keywords": ["trapped town", "monsters", "mystery", "survival"], "searchUrl": "https://www.google.com/search?q=From+movie"}, {"id": 108, "title": "Yellowjackets", "year": "2021–present", "type": "TV Show", "genre": "Psychological", "runtime": "~56 min/ep", "focus": "Survivor group", "summary": "A girls’ soccer team survives a crash and carries dark secrets into adulthood.", "keywords": ["survival", "cult", "wilderness", "trauma"], "searchUrl": "https://www.google.com/search?q=Yellowjackets+movie"}, {"id": 109, "title": "Hannibal", "year": "2013–2015", "type": "TV Show", "genre": "Psychological", "runtime": "~43 min/ep", "focus": "Investigators", "summary": "An FBI profiler and a brilliant cannibal psychiatrist form a dangerous bond.", "keywords": ["serial killer", "psychological", "elegant horror", "crime"], "searchUrl": "https://www.google.com/search?q=Hannibal+movie"}, {"id": 110, "title": "American Horror Story", "year": "2011–present", "type": "TV Show", "genre": "Haunting", "runtime": "~40–70 min/ep", "focus": "Varies", "summary": "Anthology seasons remix haunted houses, witches, cults, slashers, and apocalypse.", "keywords": ["anthology", "supernatural", "camp", "gore"], "searchUrl": "https://www.google.com/search?q=American+Horror+Story+movie"}, {"id": 111, "title": "Castle Rock", "year": "2018–2019", "type": "TV Show", "genre": "Psychological", "runtime": "~35–60 min/ep", "focus": "Town residents", "summary": "Stephen King stories collide in a town full of dark secrets.", "keywords": ["Stephen King", "mystery", "supernatural", "small town"], "searchUrl": "https://www.google.com/search?q=Castle+Rock+movie"}, {"id": 112, "title": "Penny Dreadful", "year": "2014–2016", "type": "TV Show", "genre": "Haunting", "runtime": "~48–60 min/ep", "focus": "Monster hunters", "summary": "Classic Gothic figures collide in Victorian supernatural horror.", "keywords": ["gothic", "monsters", "demons", "Victorian"], "searchUrl": "https://www.google.com/search?q=Penny+Dreadful+movie"}, {"id": 113, "title": "The Terror", "year": "2018–2019", "type": "TV Show", "genre": "Monster / Disaster", "runtime": "~42–56 min/ep", "focus": "Expedition crew", "summary": "A doomed expedition faces isolation, fear, and something monstrous.", "keywords": ["isolation", "survival", "creature", "historical"], "searchUrl": "https://www.google.com/search?q=The+Terror+movie"}];
+const genres = ["All","Zombie / Infected","Haunting","Viral Outbreak","Slasher","Cult Horror","Psychological","Monster / Disaster","Modern Horror"];
+let currentGenre = "All";
+let deck = [];
+let currentIndex = 0;
+let favorites = JSON.parse(localStorage.getItem("spookySwipeFavorites") || "[]");
+
+const deckEl = document.getElementById("deck");
+const tableEl = document.getElementById("table");
+const searchEl = document.getElementById("search");
+
+
+function currentItem() {
+  return deck[currentIndex];
+}
+function openTrailer() {
+  const item = currentItem();
+  if (!item) return;
+  window.open("https://www.youtube.com/results?search_query=" + encodeURIComponent(item.title + " official trailer"), "_blank");
+  toast("Opening trailer search");
+}
+function sortByRating() {
+  // Lightweight built-in priority sort: classics/acclaimed first, then newer titles.
+  const acclaim = ["The Exorcist","Alien","The Thing","Psycho","Halloween","Train to Busan","Hereditary","The Witch","The Conjuring","Get Out","A Quiet Place","The Descent","REC","28 Days Later","The Babadook"];
+  deck = pool().slice().sort((a,b) => {
+    const ai = acclaim.indexOf(a.title), bi = acclaim.indexOf(b.title);
+    if (ai !== -1 || bi !== -1) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    return String(b.year).localeCompare(String(a.year));
+  });
+  currentIndex = 0;
+  renderDeck();
+  renderTable(false);
+  toast("Sorted by top picks");
+}
+function showTrending() {
+  const trendingYears = ["2024","2023","2022","2021","2020"];
+  deck = shuffle(pool().filter(x => trendingYears.some(y => String(x.year).startsWith(y))));
+  if (!deck.length) deck = shuffle(pool());
+  currentIndex = 0;
+  renderDeck();
+  renderTable(false);
+  toast("Trending loaded");
+}
+function pickForMe() {
+  const p = pool();
+  if (!p.length) return;
+  const item = p[Math.floor(Math.random()*p.length)];
+  deck = [item].concat(shuffle(p.filter(x => x.id !== item.id)));
+  currentIndex = 0;
+  renderDeck();
+  toast("Picked: " + item.title);
+}
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.remove("show"); void t.offsetWidth; t.classList.add("show");
+}
+function clean(s) { return String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[m]); }
+function pool() {
+  const q = searchEl.value.toLowerCase();
+  return ALL.filter(x => (currentGenre === "All" || x.genre === currentGenre) && (!q || JSON.stringify(x).toLowerCase().includes(q)));
+}
+function shuffle(arr) { return arr.slice().sort(() => Math.random() - .5); }
+
+function initGenres() {
+  document.getElementById("genres").innerHTML = genres.map(g => `<button class="${g==="All"?"active":""}" data-genre="${clean(g)}">${clean(g)}</button>`).join("");
+  document.querySelectorAll("[data-genre]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentGenre = btn.dataset.genre;
+      document.querySelectorAll("[data-genre]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      resetDeck();
+      renderTable(false);
+      toast(currentGenre + " selected");
+    });
+  });
+}
+
+function resetDeck() {
+  deck = shuffle(pool());
+  currentIndex = 0;
+  renderDeck();
+}
+
+function cardHTML(item, offset=0) {
+  return `<article class="card" data-id="${item.id}" style="z-index:${10-offset}">
+    <div class="stamp no">NO</div><div class="stamp yes">SPOOKY</div><div class="blood"></div>
+    <div class="poster"><div class="genreMark"></div></div>
+    <div class="cardInfo">
+      <h2>${clean(item.title)}</h2>
+      <div class="meta">
+        <span class="pill">${clean(item.year)}</span><span class="pill">${clean(item.type)}</span><span class="pill">${clean(item.genre)}</span>
+        <span class="pill">${clean(item.runtime)}</span><span class="pill">Focus: ${clean(item.focus)}</span>
+      </div>
+      <p class="summary">${clean(item.summary)}</p>
+      <div class="keywords">${item.keywords.map(k=>`<span class="kw">${clean(k)}</span>`).join("")}</div>
+    </div>
+  </article>`;
+}
+
+function renderDeck() {
+  const next = deck.slice(currentIndex, currentIndex + 3);
+  deckEl.innerHTML = next.length ? next.map((item,i)=>cardHTML(item,i)).join("") : `<article class="card"><div class="poster"><div class="genreMark"></div></div><div class="cardInfo"><h2>No more picks</h2><p class="summary">Hit Reset Deck or choose another genre.</p></div></article>`;
+  enableDrag();
+}
+
+function swipe(direction) {
+  const item = deck[currentIndex];
+  const card = deckEl.querySelector(".card");
+  if (!item || !card) return;
+  if (direction === "right") {
+    card.classList.add("showYes");
+    if (!favorites.includes(item.id)) favorites.push(item.id);
+    localStorage.setItem("spookySwipeFavorites", JSON.stringify(favorites));
+    toast("Blood pick: " + item.title);
+    setTimeout(() => window.open(item.searchUrl, "_blank"), 420);
+    card.style.transform = "translateX(120vw) rotate(18deg)";
+    card.style.opacity = "0";
+  } else {
+    card.classList.add("showNo");
+    toast("Nope: " + item.title);
+    card.style.transform = "translateX(-120vw) rotate(-18deg)";
+    card.style.opacity = "0";
+  }
+  setTimeout(() => {
+    currentIndex++;
+    renderDeck();
+    renderTable(false);
+  }, 520);
+}
+
+function enableDrag() {
+  const card = deckEl.querySelector(".card");
+  if (!card || !deck[currentIndex]) return;
+  let startX = 0, startY = 0, dragging = false;
+  card.addEventListener("pointerdown", e => {
+    dragging = true; startX = e.clientX; startY = e.clientY; card.setPointerCapture(e.pointerId);
+  });
+  card.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    const dx = e.clientX - startX; const dy = e.clientY - startY;
+    card.style.transition = "none";
+    card.style.transform = `translate(${dx}px, ${dy*.25}px) rotate(${dx/18}deg)`;
+    const yes = card.querySelector(".stamp.yes"); const no = card.querySelector(".stamp.no");
+    if (dx > 0) yes.style.opacity = Math.min(dx/120, 1); else no.style.opacity = Math.min(Math.abs(dx)/120, 1);
+  });
+  card.addEventListener("pointerup", e => {
+    if (!dragging) return; dragging = false;
+    const dx = e.clientX - startX;
+    card.style.transition = "";
+    if (dx > 110) swipe("right");
+    else if (dx < -110) swipe("left");
+    else {
+      card.style.transform = "";
+      card.querySelector(".stamp.yes").style.opacity = 0;
+      card.querySelector(".stamp.no").style.opacity = 0;
+    }
+  });
+}
+
+function renderTable(force100=true, favOnly=false) {
+  let rows = favOnly ? ALL.filter(x => favorites.includes(x.id)) : pool();
+  if (force100) rows = rows.slice(0,100);
+  document.getElementById("panelTitle").textContent = favOnly ? "Favorites" : (force100 ? "100 Horror Picks" : "Sorted Horror List");
+  document.getElementById("count").textContent = rows.length + " titles";
+  tableEl.innerHTML = rows.map(x => `<div class="row">
+    <div><b>${clean(x.title)}</b><br><small>${clean(x.summary)}</small></div>
+    <div><small>${clean(x.year)} • ${clean(x.runtime)}</small></div>
+    <div><small>${clean(x.genre)}</small></div>
+    <div><small>Focus: ${clean(x.focus)}</small></div>
+    <button data-open="${x.id}">Search</button>
+  </div>`).join("");
+  document.querySelectorAll("[data-open]").forEach(b => b.addEventListener("click", () => {
+    const item = ALL.find(x => x.id == b.dataset.open);
+    if (item) window.open(item.searchUrl, "_blank");
+  }));
+}
+
+document.getElementById("noBtn").addEventListener("click", () => swipe("left"));
+document.getElementById("yesBtn").addEventListener("click", () => swipe("right"));
+document.getElementById("randomBtn").addEventListener("click", () => {
+  const p = pool(); if (!p.length) return;
+  const item = p[Math.floor(Math.random()*p.length)];
+  deck = [item, ...shuffle(p.filter(x=>x.id!==item.id))];
+  currentIndex = 0; renderDeck(); toast("Random loaded");
+});
+document.getElementById("sortBtn").addEventListener("click", () => {
+  renderTable(true); document.querySelector(".panel").scrollIntoView({behavior:"smooth", block:"start"}); toast("Loaded up to 100 picks");
+});
+document.getElementById("favoritesBtn").addEventListener("click", () => {
+  renderTable(true, true); toast("Favorites opened");
+});
+document.getElementById("resetBtn").addEventListener("click", () => { resetDeck(); renderTable(false); toast("Deck reset"); });
+
+document.getElementById("trailerBtn").addEventListener("click", openTrailer);
+document.getElementById("ratingBtn").addEventListener("click", sortByRating);
+document.getElementById("trendingBtn").addEventListener("click", showTrending);
+document.getElementById("pickBtn").addEventListener("click", pickForMe);
+
+searchEl.addEventListener("input", () => { resetDeck(); renderTable(false); });
+
+initGenres();
+resetDeck();
+renderTable(false);
+</script>
+</body>
+</html>
