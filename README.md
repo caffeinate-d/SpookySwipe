@@ -18,9 +18,3 @@ A mobile-friendly horror swipe app for GitHub Pages.
 - Sort button with up to 100 horror movies/shows/games
 - Favorites saved locally in the browser
 - Safari and iPhone friendly
-
-## GitHub Pages
-Upload all files to a public GitHub repository named `SpookySwipe`, then enable Pages from `main` branch and `/root`.
-
-Your site will be:
-`https://YOUR-USERNAME.github.io/SpookySwipe/`
