@@ -1,0 +1,15 @@
+{
+  "name": "SpookySwipe",
+  "short_name": "SpookySwipe",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#050608",
+  "theme_color": "#ff2d55",
+  "icons": [
+    {
+      "src": "icons/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
